@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from setuptools import setup
+from setuptools import setup, find_packages
 import re
 
 # Note this will fail if an appropriate MANIFEST.in file is not present.
@@ -17,6 +17,7 @@ REQUIREMENTS = [x for x in REQUIREMENTS
 
 setup(name='doom',
       version='0.0.1',
+      packages=find_packages(include=['doom', 'doom.*']),
       description='',
       long_description='',
       url='https://github.com/jbrockmendel/doom',
@@ -25,7 +26,7 @@ setup(name='doom',
       author='Brock Mendel',
       author_email='jbrockmendel@gmail.com',
 
-      py_modules=[],
+      py_modules=['compat'],
       install_requires=REQUIREMENTS,
       extras_require={':python_version == "2.7"': py2only},
 
