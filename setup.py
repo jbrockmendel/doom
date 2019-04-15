@@ -16,7 +16,7 @@ REQUIREMENTS = [x for x in REQUIREMENTS
 
 
 setup(name='doom',
-      version='0.0.1',
+      version='0.1.0',
       packages=find_packages(include=['doom', 'doom.*']),
       description='',
       long_description='',
