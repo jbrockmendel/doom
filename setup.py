@@ -26,7 +26,7 @@ setup(name='doom',
       author='Brock Mendel',
       author_email='jbrockmendel@gmail.com',
 
-      py_modules=['compat'],
+      py_modules=['compat', 'fslib'],
       install_requires=REQUIREMENTS,
       extras_require={':python_version == "2.7"': py2only},
 
