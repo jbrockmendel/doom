@@ -19,11 +19,14 @@ REQUIREMENTS = [x for x in REQUIREMENTS
                 if not re.search('python_version.*2', x)]
 
 
+with open('README.md', 'rb') as fd:
+    LONG_DESCRIPTION = fd.read()
+
 setup(name='doom',
       version=versioneer.get_version(),
       packages=find_packages(include=['doom', 'doom.*']),
       description='',
-      long_description='',
+      long_description=LONG_DESCRIPTION,
       url='https://github.com/jbrockmendel/doom',
       license='MIT',
       cmdclass=cmdclass,
