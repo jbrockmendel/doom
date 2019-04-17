@@ -20,7 +20,8 @@ REQUIREMENTS = [x for x in REQUIREMENTS
 
 
 with open('README.md', 'rb') as fd:
-    LONG_DESCRIPTION = fd.read()
+    LONG_DESCRIPTION = fd.read().decode('utf-8')
+
 
 setup(name='doom',
       version=versioneer.get_version(),
@@ -34,7 +35,7 @@ setup(name='doom',
       author='Brock Mendel',
       author_email='jbrockmendel@gmail.com',
 
-      py_modules=['compat', 'fslib', 'utils'],
+      py_modules=['compat', 'fslib', 'lning', 'utils'],
       install_requires=REQUIREMENTS,
       extras_require={':python_version == "2.7"': py2only},
 
