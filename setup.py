@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
 import re
+from setuptools import setup, find_packages
 
 import versioneer
 cmdclass = versioneer.get_cmdclass()
