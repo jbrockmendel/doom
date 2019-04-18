@@ -6,7 +6,7 @@
 # TODO: automate the bumping of MAJOR/MINOR/BUGFIX?
 MAJOR="0"
 MINOR="2"
-BUGFIX="1"
+BUGFIX="2"
 
 git commit --allow-empty -m 'RLS: v '$MAJOR.$MINOR.$BUGFIX
 git tag -a v$MAJOR.$MINOR.$BUGFIX -m "Version "$MAJOR.$MINOR.$BUGFIX
