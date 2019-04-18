@@ -8,7 +8,7 @@ import multiprocessing
 
 import pytest
 
-from doom.lning import LockingCrossProcessHandler
+from doom.lning import LockingCrossProcessHandler, UniqueFilter
 
 
 def _log(logger, msg):
@@ -49,3 +49,23 @@ def test_LockingCrossProcessHandler(parallel_cls):
         #  i.e. LockingCrossProcessHandler isnt pointless.
 
     assert not os.path.exists(path), path
+
+
+def test_unique_filter():
+    logger = logging.Logger(__name__)
+    msg = 'msg'
+    record = logger.makeRecord('name', logging.INFO,
+                               'test_logFilter', 111, msg, (), exc_info=False)
+
+    filt = UniqueFilter()
+
+    ans = msg in filt.no_duplicates
+    assert ans is False, ans
+
+    ret = filt.filter(record)
+    assert ret is True, ret
+
+    filt.add_no_duplicate_msg(msg)
+
+    ret = filt.filter(record)
+    assert ret is False, ret
