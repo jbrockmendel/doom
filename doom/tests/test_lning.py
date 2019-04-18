@@ -11,7 +11,11 @@ import pytest
 from doom.lning import LockingCrossProcessHandler, UniqueFilter
 
 
-def _log(logger, msg):
+def _do_log(path, name, msg):
+    logger = logging.Logger(name)
+    handler = LockingCrossProcessHandler(path, mode='a', delay=True)
+    logger.addHandler(handler)
+
     logger.info(msg)
 
 
@@ -21,16 +25,8 @@ def test_LockingCrossProcessHandler(parallel_cls):
     with tempfile.NamedTemporaryFile() as fd:
         path = fd.name
 
-        logger1 = logging.Logger('1')
-        handler1 = LockingCrossProcessHandler(path, mode='a', delay=True)
-        logger1.addHandler(handler1)
-
-        logger2 = logging.Logger('2')
-        handler2 = LockingCrossProcessHandler(path, mode='a', delay=True)
-        logger2.addHandler(handler2)
-
-        track1 = parallel_cls(target=_log, args=(logger1, '1' * 1000,))
-        track2 = parallel_cls(target=_log, args=(logger2, '2' * 1000,))
+        track1 = parallel_cls(target=_do_log, args=(path, '1', '1' * 1000))
+        track2 = parallel_cls(target=_do_log, args=(path, '2', '2' * 1000))
 
         track1.start()
         track2.start()
