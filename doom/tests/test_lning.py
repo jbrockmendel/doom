@@ -69,3 +69,5 @@ def test_unique_filter():
 
     ret = filt.filter(record)
     assert ret is False, ret
+
+    # TODO: test that the message is not emitted?

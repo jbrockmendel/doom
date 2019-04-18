@@ -3,14 +3,14 @@
 # See https://github.com/pandas-dev/pandas/issues/18985
 # TODO: automate the bumping of MAJOR/MINOR/BUGFIX?
 MAJOR="0"
-MINOR="1"
-BUGFIX="2"
+MINOR="2"
+BUGFIX="1"
 
 git commit --allow-empty -m 'RLS: v '$MAJOR.$MINOR.$BUGFIX
 git tag -a v$MAJOR.$MINOR.$BUGFIX -m "Version "$MAJOR.$MINOR.$BUGFIX
 
 rm -rf dist
-python2 setup.py sdist bdist_wheel
+python2 setup.py sdist
 python3 setup.py sdist bdist_wheel
 
 # Assumes pypi account is already set up with appropriate permissions/config
