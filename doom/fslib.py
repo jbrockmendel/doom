@@ -37,3 +37,25 @@ def makedirs(path, mode=0o777):
         else:  # pragma: no cover
             raise
     os.umask(original_umask)
+
+
+def get_name_length_limit(dirname):
+    """
+    Find the limit on name lengths associated with the filesystem mount
+    containing dirname.
+
+    Parameters
+    ----------
+    dirname : str
+
+    Returns
+    -------
+    limit : int
+    """
+    # TODO: what if we are looking at a symlink?  Do we need the limit for
+    #  the source or the target of the link?  The minimum of the two limits?
+    dirname = os.path.abspath(dirname)
+    while not os.path.exists(dirname):
+        # e.g. we passed a file that hasn't been written yet
+        dirname = os.path.split(dirname)[0]
+    return os.statvfs(dirname).f_namemax

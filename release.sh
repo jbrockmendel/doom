@@ -1,4 +1,6 @@
 #!/bin/bash
+# Usage Note: you need to bump the version, then commit before running the
+#  script
 
 # See https://github.com/pandas-dev/pandas/issues/18985
 # TODO: automate the bumping of MAJOR/MINOR/BUGFIX?
