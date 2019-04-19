@@ -24,27 +24,39 @@ def test_makedirs_perms():
     os.rmdir(dname)
 
 
-def test_get_name_length_limit():
-    # Largely a smoke test, assumes that os.statvfs(dirname).f_namemax does
-    #  what the stdlib docs say
-    dirname = os.path.split(__file__)[0]
+class TestGetNameLengthLimit(object):
+    def test_get_name_length_limit(self):
+        # Largely a smoke test, assumes that os.statvfs(dirname).f_namemax does
+        #  what the stdlib docs say
+        dirname = os.path.split(__file__)[0]
 
-    result = get_name_length_limit(dirname)
-    expected = os.statvfs(dirname).f_namemax
-    assert result == expected
-    assert isinstance(result, int) and result >= len(dirname)
+        result = get_name_length_limit(dirname)
+        expected = os.statvfs(dirname).f_namemax
+        assert result == expected
+        assert isinstance(result, int) and result >= len(dirname)
 
+    def test_get_name_length_limit_nonexistent(self):
+        # os.statvfs(dirname) will raise if we pass a non-existent path,
+        #  check that we can do this and get the result for the enclosing
+        #  directory
+        dirname = os.path.split(__file__)[0]
+        path = os.path.join(dirname, 'non-existent-path')
+        assert not os.path.exists(path)
+        result = get_name_length_limit(path)
+        expected = get_name_length_limit(dirname)
+        assert result == expected
 
-def test_get_name_length_limit_nonexistent():
-    # os.statvfs(dirname) will raise if we pass a non-existent path,
-    #  check that we can do this and get the result for the enclosing directory
-    dirname = os.path.split(__file__)[0]
-    path = os.path.join(dirname, 'non-existent-path')
-    assert not os.path.exists(path)
-    result = get_name_length_limit(path)
-    expected = get_name_length_limit(dirname)
-    assert result == expected
+        path = os.path.join(path, 'another-level')
+        result = get_name_length_limit(path)
+        assert result == expected
 
-    path = os.path.join(path, 'another-level')
-    result = get_name_length_limit(path)
-    assert result == expected
+    def test_get_name_length_limit_unicode(self):
+        # Make sure os.statvfs doesn't complain about being passed non-ascii
+        dname = tempfile.mkdtemp(u'é')
+        # TODO: when py3 only, use TemporaryDirectory context
+        try:
+            result = get_name_length_limit(dname)
+            expected = get_name_length_limit(tempfile.gettempdir())
+            assert result == expected
+        finally:
+            os.rmdir(dname)

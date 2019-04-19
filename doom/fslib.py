@@ -54,6 +54,10 @@ def get_name_length_limit(dirname):
     """
     # TODO: what if we are looking at a symlink?  Do we need the limit for
     #  the source or the target of the link?  The minimum of the two limits?
+    if not isinstance(dirname, bytes):
+        enc = sys.getfilesystemencoding()
+        dirname = dirname.encode(enc)
+
     dirname = os.path.abspath(dirname)
     while not os.path.exists(dirname):
         # e.g. we passed a file that hasn't been written yet
