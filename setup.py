@@ -35,11 +35,13 @@ setup(name='doom',
       author='Brock Mendel',
       author_email='jbrockmendel@gmail.com',
 
-      py_modules=['compat', 'fslib', 'lning', 'utils'],
+      py_modules=['compat', 'fslib', 'lning', 'utils', 'sysinfo'],
       install_requires=REQUIREMENTS,
       extras_require={':python_version == "2.7"': py2only},
 
-      entry_points={'console_scripts': []},
+      entry_points={
+          'console_scripts': ['get_local_ip=doom.sysinfo.get_local_ip:script']
+      },
 
       test_suite="tests",
       keywords=[],
