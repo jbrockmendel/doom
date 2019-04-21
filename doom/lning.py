@@ -5,8 +5,21 @@ Natural logging.  Hah!
 """
 import fcntl
 
-from logging import Filter
+from logging import Filter, Formatter
 from logging.handlers import WatchedFileHandler
+
+
+# My preferred format for log messsages
+natural_logformat = (
+    '%(asctime)s.%(msecs)03d - '
+    '%(name)-20.20s - %(process)-5d - '
+    '%(levelname)-8s - '
+    '%(module).23s.%(funcName)s:%(lineno)-4s - '
+    '%(message)s'
+)
+natural_formatter = Formatter(natural_logformat, '%Y-%m-%d %H:%M:%S')
+# TODO: %Z for timezone may be worth considering
+# TODO: port tests
 
 
 class LockingCrossProcessHandler(WatchedFileHandler):
