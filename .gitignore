@@ -3,9 +3,10 @@ __pycache__
 
 .DS_Store
 
-.pytest_cache/
 .python-version
 
+.pytest_cache/
+.hypothesis/
 .coverage
 
 build/

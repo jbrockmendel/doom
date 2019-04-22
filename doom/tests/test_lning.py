@@ -3,19 +3,19 @@
 import logging
 import os
 import multiprocessing
-import random
 import re
 import string
 import tempfile
 import threading
 
-import mock
 import pytest
-from six import unichr
 from six.moves import StringIO
 
+import hypothesis.strategies as st
+from hypothesis import given, assume
+
 from doom.lning import (
-    LockingCrossProcessHandler, UniqueFilter, natural_formatter
+    LockingCrossProcessHandler, UniqueFilter, natural_formatter, patch_logger
 )
 
 src_filename = os.path.splitext(os.path.split(__file__)[-1])[0]
@@ -79,40 +79,9 @@ def test_unique_filter():
     # TODO: test that the message is not emitted?
 
 
-def _gen_names(num_names):
-    # manually implementing to avoid hypothesis dependency; with hypothesis
-    #  we would just use
-    #  @given(st.text(alphabet=string.ascii_letters + string.digits,
-    #                 min_size=3, max_size=120))
-    names = []
-
-    for n in range(num_names):
-        nchars = random.randint(3, 120)
-        chars = [random.choice(string.ascii_uppercase + string.digits)
-                 for _ in range(nchars)]
-        name = ''.join(chars)
-        names.append(name)
-    return names
-
-
-def _gen_msgs(num_msgs):
-    # manually implementing to avoid hypothesis dependency; with hypothesis
-    #  we would just use
-    #  @given(st.text(min_size=1, max_size=256))
-    msgs = []
-
-    for n in range(num_msgs):
-        nchars = random.randint(1, 256)
-        # Note: 1000 is an arbitrary upper bound
-        points = [random.randint(40, 1000) for _ in range(nchars)]
-        chars = [unichr(x) for x in points]
-        msg = ''.join(chars)
-        msgs.append(msg)
-    return msgs
-
-
-@pytest.mark.parametrize('name', _gen_names(5))
-@pytest.mark.parametrize('msg', _gen_msgs(5))
+@given(name=st.text(alphabet=string.ascii_letters + string.digits,
+                    min_size=3, max_size=120),
+       msg=st.text(min_size=1, max_size=256))
 @pytest.mark.parametrize('level', [10, 20, 30, 40, 50])
 def test_logformat(level, name, msg):
 
@@ -121,7 +90,7 @@ def test_logformat(level, name, msg):
         pytest.skip('Test assumption invalid')
 
     logger = logging.Logger(name)
-    # patching.patch_makeRecord(logger)
+    # patch_logger(logger)  # optional, but not necessary for this test
     handler = logging.StreamHandler()
     handler.setFormatter(natural_formatter)
     logger.addHandler(handler)
@@ -141,8 +110,8 @@ def test_logformat(level, name, msg):
     func = funcdict[level]
 
     c = StringIO()
-    with mock.patch.object(handler, 'stream', c):
-        func(msg)
+    handler.stream = c
+    func(msg)
 
     cv = c.getvalue()
 
@@ -158,3 +127,72 @@ def test_logformat(level, name, msg):
 
     cvf = cv.find(src_filename)
     assert cvf == 68, (cvf, cv,)
+
+
+@given(st.sampled_from([10, 20, 30, 40, 50]),
+       st.text(alphabet=string.ascii_letters + '/', min_size=2, max_size=255),
+       st.integers(min_value=0, max_value=9999),
+       st.text(alphabet=string.ascii_letters + string.digits,
+               min_size=3, max_size=120),
+       st.text(alphabet=string.ascii_letters + string.digits,
+               min_size=1, max_size=256),
+       # TODO: generalize to allow binary characters
+       st.text(alphabet=string.ascii_letters + string.digits,
+               min_size=3, max_size=32))
+def test_remake_record(level, fn, lno, name, msg, func):
+
+    module_name = os.path.splitext(os.path.split(fn)[-1])[0]
+    assume(module_name != '')
+    assume(src_filename not in name)
+    assume(func != '')
+
+    logger = logging.Logger(name)
+    patch_logger(logger)
+    handler = logging.StreamHandler()
+    handler.setFormatter(natural_formatter)
+    logger.addHandler(handler)
+
+    args = ()
+    exc_info = False
+
+    record = logger.makeRecord(name, level, fn, lno, msg, args, exc_info, func)
+
+    c = StringIO()
+    handler.stream = c
+    logger.handle(record)
+
+    cv = c.getvalue()
+
+    assert re.search(r'^\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} - ', cv)
+
+    tail = cv[26:]
+    name20 = name[:20]
+    name20 = name20 + ' ' * (20 - len(name20))
+    assert tail.startswith(name20), (tail, name20, cv,)
+
+    tail = cv[49:]
+    pid = os.getpid()
+    spid = str(pid)
+    assert tail.startswith(spid), (tail, spid, cv,)
+
+    tail = cv[57:]
+    levelname = logging.getLevelName(level)
+    assert tail.startswith(levelname), (tail, cv,)
+
+    assert cv[65:68] == ' - ', (cv[65:68], cv,)
+
+    tail = cv[68:]
+    split_tail = tail.split(':')[0]
+    # This should be module_name.func_name, unless truncated, in which
+    #  case it should be the beginning of module_name.func_name
+    mdl = module_name[:30 - 7]
+    expected = mdl + '.' + func
+    assert expected.startswith(split_tail), (expected, split_tail, cv,)
+    mfl = split_tail + ':' + str(lno)
+    assert tail.startswith(mfl), (mfl, tail, cv,)
+
+    x9 = 98
+    cv9x = cv[x9:x9 + 3]
+    assert cv9x == ' - ', (cv9x, cv,)
+
+    assert cv.endswith(msg + '\n'), (cv, msg,)
